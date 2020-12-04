@@ -1,0 +1,114 @@
+{#<!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta charset="UTF-8">#}
+{#    <title>Title</title>#}
+{#</head>#}
+{#<body>#}
+{#这是模板 <br>#}
+{#这是首页 <br>#}
+{##}
+{#下面是一个变量代码块的使用#}
+{#{{ url_str }} <br>#}
+{##}
+{#列表的使用#}
+{#{{ my_list }} <br>#}
+{#{{ my_list.2 }} <br>#}
+{#{{ my_list[2] }} <br>#}
+{##}
+{#字典的使用#}
+{#{{ my_dict }} <br>#}
+{#{{ my_dict.url }} <br>#}
+{#{{ my_dict['url'] }} <br>#}
+{##}
+{#{{ my_int }} <br>#}
+{##}
+{#<hr>#}
+{##}
+{#控制代码块 {%  %}#}
+{##}
+{#For循环的使用, 建议先写for,然后按住tab进行补全#}
+{#{% for num in my_list %}#}
+{#    数据大于3, 才能显示#}
+{#    {% if num > 3 %}#}
+{#        {{ num }} <br>#}
+{#    {% endif %}#}
+{#{% endfor %}#}
+{##}
+{#<hr>#}
+{##}
+{#过滤器#}
+{##}
+{#字符串变大写#}
+{#{{ url_str | upper }}<br>#}
+{#字符串反转#}
+{#{{ url_str | reverse }}<br>#}
+{#过滤器链式调用#}
+{#{{ url_str | upper | reverse | lower | reverse}}<br>#}
+{##}
+{##}
+{##}
+{##}
+{#</body>#}
+{#</html>#}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>投票页面</title>
+
+</head>
+<body>
+<ul id="useList">
+    {% for key,val in users.items() %}
+        <li uid="{{ key }}">{{ val.name }} ({{ val.count }}) </li>  {# 前端显示效果 #}
+    {% endfor %}
+</ul>
+
+<script src="http://code.jquery.com/jquery-3.0.0.min.js"></script>
+<script>
+            $(function () {
+            $('#userList').on('click','li',function () {     // 给ul标签绑定事件委托
+                var uid = $(this).attr('uid');      // 设置当前标签值为uid
+                $.ajax({
+                    url:'/vote',
+                    type:'POST',
+                    data:{uid:uid},
+                    success:function (arg) {
+                        console.log(arg);
+                    }
+                })
+            });
+
+        });
+
+
+        /*
+        获取投票信息
+         */
+        function get_vote() {
+            $.ajax({
+                url:'/get/vote',
+                type:"GET",
+                dataType:'JSON',
+                success:function (arg) {
+                    $('#userList').empty();     // 清空id=userList标签里的所有内容
+                    $.each(arg,function (k,v) {     // 循环遍历    "1":{"name":"小黑","count":1}  键为前者，值为后者
+                        var li = document.createElement('li');   // 创建li标签
+                        li.setAttribute('uid',k);   // 设置当前的属性名与属性值
+                        li.innerText = v.name + "(" + v.count + ')' ;   // 生成新的DOM
+                        $('#userList').append(li);  // 添加该标签，加上下面的2秒执行get_vode，实现轮询
+                    })
+
+                }
+            })
+        }
+
+
+        setInterval(get_vote,3000);   // 3秒
+</script>
+
+
+</body>
+</html>
