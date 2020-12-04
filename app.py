@@ -109,11 +109,11 @@ def send_email():
     return jsonify(dict(msg="Success"))
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['GET','POST'])
 def register():
     user_data = request.get_json()
     form = RegisterForm(data=user_data)
-    if form.validate_on_submit():
+    if form.validate():
 
         user = User(user_data['username'], user_data['password'])
         db.session.add(user)
@@ -127,12 +127,12 @@ def login():
     user_data=request.get_json()
     form = LoginForm(data=user_data)
     emsg = None
-    if form.validate():
+    if form.validate_on_submit():
         user = form.get_user()
         print(user.password)
         print(user.username)
         login_user(user)  # 创建用户 Session
-        print('request.args.getis',request.args.get('next'))
+        # print('request.args.getis',request.args.get('next'))
         return redirect(request.args.get('next') or url_for('index'))
     return render_template('login.html', form=form, emsg=emsg)
 
@@ -151,8 +151,8 @@ def logout():
 
 
 if __name__ == '__main__':
-    # with app.app_context():
-    #     db.create_all()
+    with app.app_context():
+        db.create_all()
     csrf = CSRFProtect()
     csrf.init_app(app)
     print(app.config['WTF_CSRF_CHECK_DEFAULT'])
