@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, redirect, url_for, render_template
+from flask import Flask, request, jsonify, redirect, url_for, render_template,flash
 from flask_script import Manager, Shell
 from flask_mail import Mail, Message
 from threading import Thread
@@ -37,6 +37,10 @@ login_manager.login_view = 'login'  # 设置用户登录视图函数 endpoint
 
 class RegisterForm(FlaskForm):
     """注册表单类"""
+    def __init__(self, *args, **kwargs):
+        kwargs['csrf_enabled'] = False
+        super(RegisterForm, self).__init__(*args, **kwargs)
+
     username = StringField('Username', validators=[Length(max=64)])
     password = PasswordField('Password', validators=[Length(8, 16)])
     confirm = PasswordField('Confirm Password')
@@ -45,11 +49,18 @@ class RegisterForm(FlaskForm):
         if User.query.filter_by(username=field.data).count() > 0:
             raise ValidationError('Username %s already exists!' % field.data)
 
+    def validate_password(self, field):
+        if self.password!=self.confirm:
+            raise ValidationError('Password inconsistency!')
 
 class LoginForm(FlaskForm):
     """登录表单类"""
     username = StringField('username', validators=[DataRequired()])
     password = PasswordField('password', validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        kwargs['csrf_enabled'] = False
+        super(LoginForm, self).__init__(*args, **kwargs)
 
     def get_user(self):
         return User.query.filter_by(username=self.username.data).first()
@@ -62,8 +73,7 @@ class LoginForm(FlaskForm):
         if not self.get_user():
             return
         if not self.get_user().verify_password(field.data):
-            print(field.data)
-            print(self.get_user().password)
+
             raise ValidationError('Incorrect password!')
 
 
@@ -80,7 +90,6 @@ class User(UserMixin, db.Model):
 
     def verify_password(self, password):
         """密码验证"""
-        # print("verity here ", self.password)
         if self.password is None:
             return False
         return check_password_hash(self.password, password)
@@ -115,9 +124,10 @@ def register():
     form = RegisterForm(data=user_data)
     if form.validate():
 
-        user = User(user_data['username'], user_data['password'])
+        user = User(username=user_data['username'], password=user_data['password'])
+        print(user.id)
         db.session.add(user)
-        db.commit()
+        db.session.commit()
         return jsonify({'status': 'success'})
     return jsonify({'status': 'fail', 'errormsg': form.errors}), 400
 
@@ -125,14 +135,26 @@ def register():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     user_data=request.get_json()
+    # print('user_Data next')
+    # print(user_data)
+    # print(request.form)
+    # print('user_data end')
     form = LoginForm(data=user_data)
+    # print(form.username.data)
+    # print(form.password.data)
+    # print('is validate_username ')
+    # print(form.validate_username(form.username))
+    # print('is validate_password ')
+    # print(form.validate_password(form.password))
+    # print('is vali',form.validate())
+    # print('form error ')
+
     emsg = None
-    if form.validate_on_submit():
+    if form.validate():
         user = form.get_user()
         print(user.password)
         print(user.username)
         login_user(user)  # 创建用户 Session
-        # print('request.args.getis',request.args.get('next'))
         return redirect(request.args.get('next') or url_for('index'))
     return render_template('login.html', form=form, emsg=emsg)
 
@@ -151,11 +173,11 @@ def logout():
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    csrf = CSRFProtect()
-    csrf.init_app(app)
-    print(app.config['WTF_CSRF_CHECK_DEFAULT'])
-    app.config['WTF_CSRF_CHECK_DEFAULT'] = False
-    print(app.config['WTF_CSRF_CHECK_DEFAULT'])
+    # with app.app_context():
+    #     db.create_all()
+    # csrf = CSRFProtect()
+    # csrf.init_app(app)
+    # print(app.config['WTF_CSRF_CHECK_DEFAULT'])
+    # app.config['WTF_CSRF_CHECK_DEFAULT'] = False
+    # print(app.config['WTF_CSRF_CHECK_DEFAULT'])
     app.run()
