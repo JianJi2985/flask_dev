@@ -9,15 +9,20 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
 import uuid
 from flask_wtf import FlaskForm
+from flask_apscheduler import APScheduler
 from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import DataRequired, EqualTo, ValidationError, Length
 from time import sleep
+from datetime import datetime
+from flask_socketio import SocketIO
+import tushare as ts
 
 import os
 
 app = Flask(__name__)
 app.secret_key = 'iashdfpi'
 app.config.update(
+    SCHEDULER_API_ENABLED=True,
     SQLALCHEMY_DATABASE_URI='mysql+pymysql://root:1234@127.0.0.1/flask_dev',
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     DEBUG=True,
@@ -29,6 +34,17 @@ app.config.update(
     MAIL_PASSWORD='AWGIHRBEBSVPURHA',  # 授权码
     MAIL_DEBUG=True
 )
+app.config['JOBS'] = [{'id': 'job1',
+                       'func': '__main__:job_test',
+                       'args': (1, 2),
+                       'trigger': 'cron',  # cron表示定时任务
+                       'hour': 18,
+                       'minute': 14},
+                      {'id': 'job2',
+                       'func': '__main__:interval_test',
+                       'trigger': 'interval',
+                       'seconds': 5,
+                       }]
 mail = Mail(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()  # 实例化登录管理对象
@@ -36,7 +52,15 @@ login_manager.init_app(app)  # 初始化应用
 login_manager.login_view = 'login'  # 设置用户登录视图函数 endpoint
 
 
-#     =False,
+def interval_test():
+    print('interval job')
+
+
+def job_test(a, b):
+    stock_all = ts.get_today_all()
+    stock.to_csv('./download/')
+    print('job_test ', a + b)
+
 
 class RegisterForm(FlaskForm):
     """注册表单类"""
@@ -161,15 +185,18 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
 @app.route('/long-polling')
 def long_polling():
     i = 0
     while True:
         if i == 10:
-            return jsonify({'error': 0,'msg':'未查询到更新'})
+            return jsonify({'error': 0, 'msg': '未查询到更新'})
         else:
             i += 1
             sleep(5)
+
+
 # CREATE TABLE Trade (
 #     ID int NOT NULL,
 #     product varchar(50) NOT NULL,
@@ -180,9 +207,8 @@ def long_polling():
 # );
 # insert into trade value(1,'A',5.4,'2020-01-02',True);
 class Trade(db.Model):
-
     id = db.Column(db.Integer, primary_key=True)
-    product = db.Column(db.String(50),nullable=False)
+    product = db.Column(db.String(50), nullable=False)
     volumn = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     is_valid = db.Column(db.Boolean, nullable=False)
@@ -190,48 +216,52 @@ class Trade(db.Model):
     def __init__(self, **kwargs):
         super(Trade, self).__init__(**kwargs)
 
+
 class TradeAPI(MethodView):
-
+    # __tablename__='Trade'
     def get(self):
-        trade=request.get_json()
+        trade = request.args.to_dict()
+        print(trade)
         if ('start_date' not in trade) or (not trade['start_date']):
-            start_date='2000-01-01'
+            start_date = '2000-01-01'
+        else:
+            start_date = trade['start_date']
         if ('end_date' not in trade) or (not trade['end_date']):
-            end_date='2020-12-31'
-
-        result=db.session.query('Trade').filter(Trade.timestamp.between(start_date, end_date)).all()
+            end_date = '2020-12-31'
+        else:
+            end_date = trade['end_date']
+        result = ""
+        result = db.session.query('id').filter(Trade.timestamp.between(start_date, end_date)).all()
         return jsonify(result)
 
     def post(self):
         trade = request.get_json()
-        new_trade= Trade(trade)
+        new_trade = Trade(trade)
         db.session.add(new_trade)
         db.session.commit()
-        return jsonify({'status':'success'})
-
+        return jsonify({'status': 'success'})
 
     # @login_required # need to implement
     # @admin_required
     def delete(self):
-        id=request.get_json()['id']
+        id = request.get_json()['id']
         Trade.query.filter_by(id=id).delete()
         db.commit()
-        return jsonify({'status':'success'})
-
+        return jsonify({'status': 'success'})
 
     def put(self):
         trade = request.get_json()
-        current_trade=Trade.query.get(trade['id'])
-        current_trade.product=trade['product']
-        current_trade.volumn=trade['volumn']
+        current_trade = Trade.query.get(trade['id'])
+        current_trade.product = trade['product']
+        current_trade.volumn = trade['volumn']
         current_trade.timestamp = trade['timestamp']
         current_trade.is_valid = trade['is_valid']
         db.session.commit()
-        return jsonify({'status':'success'})
+        return jsonify({'status': 'success'})
+
 
 trade_view = TradeAPI.as_view('trade_api')
-app.add_url_rule('/trade/',view_func=trade_view, methods=['GET','POST','PUT','DELETE'])
-
+app.add_url_rule('/trade/', view_func=trade_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
 
 if __name__ == '__main__':
     # with app.app_context():
@@ -241,4 +271,7 @@ if __name__ == '__main__':
     # print(app.config['WTF_CSRF_CHECK_DEFAULT'])
     # app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     # print(app.config['WTF_CSRF_CHECK_DEFAULT'])
+    scheduler = APScheduler()
+    scheduler.init_app(app)
+    scheduler.start()
     app.run()
