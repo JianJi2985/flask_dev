@@ -38,12 +38,12 @@ app.config['JOBS'] = [{'id': 'job1',
                        'func': '__main__:job_test',
                        'args': (1, 2),
                        'trigger': 'cron',  # cron表示定时任务
-                       'hour': 18,
-                       'minute': 14},
+                       'hour': 20,
+                       'minute': 9},
                       {'id': 'job2',
                        'func': '__main__:interval_test',
                        'trigger': 'interval',
-                       'seconds': 5,
+                       'seconds': 20,
                        }]
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -57,8 +57,9 @@ def interval_test():
 
 
 def job_test(a, b):
-    stock_all = ts.get_today_all()
-    stock.to_csv('./download/')
+    # stock_all = ts.get_today_all()
+    stock_all = ts.get_k_data(code='600000', start='2019-10-01', end='2019-10-07')
+    stock_all.to_csv('./download/%s.csv' % (datetime.today().strftime('%Y%m%d')))
     print('job_test ', a + b)
 
 
