@@ -1,5 +1,5 @@
 create table Bond(
-    ID int NOT NULL,
+    id int NOT NULL,
     SECUABBR varchar(50) not null unique,
     CHINAME varchar(200),
     SECUCATEGORY varchar(50),
@@ -13,8 +13,8 @@ insert into Bond (ID,SECUABBR,CHINAME,SECUCATEGORY,LISTINGDATE,DELISTINGDATE,ISS
 (1,'14温高新债02','2014年第二期温州高新技术产业开发区投资建设开发有限公司公司债券','0','2014-06-10','2021-05-30','12','7.3');
 
 
-create table profile(
-    ID int NOT NULL,
+create table Profile(
+    id int NOT NULL,
     name varchar(50) not null,
     avatar varchar(200),
     userid varchar(50),
@@ -23,33 +23,26 @@ create table profile(
     PRIMARY KEY (ID)
 )
 
-insert into profile value (1,'Xiaoming','https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png',
+insert into Profile value (1,'Xiaoming','https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png',
 '0001','rbs_jijian@163.com','13661378786')
-CREATE table user  (
-    ID int NOT NULL,
+CREATE table User  (
+    id int NOT NULL,
     username varchar(50) NOT NULL,
     password varchar(200) not null,
     authority varchar(20),
     PRIMARY KEY (ID)
 );
-CREATE table user  (
-    ID int NOT NULL,
-    username varchar(50) NOT NULL,
-    password varchar(200) not null,
-    authority varchar(20),
-    PRIMARY KEY (ID)
-);
-(1,'admin1','pbkdf2:sha256:150000$FwJoiuvd$4496b826c4192d168e5decbc502d5e3069dff2143c90cd6f7375e741b33b7a80','admin')
-CREATE TABLE Trade (
-    ID int NOT NULL,
-    product varchar(50) NOT NULL,
-    volumn float not null,
-    timestamp date,
-    is_valid boolean,
-    PRIMARY KEY (ID)
-);
-insert into trade value(1,'A',5.4,'2020-01-02',True);
-
-select * from bond where secucategory='1'  and issuesize=12 and couponrate=7.3 ;
-
-select * from bond where secucategory='1' and issuesize=12 and listingdate='2014-06-10' and delistingdate='2021-05-30'
+insert into User value (1,'admin1','pbkdf2:sha256:150000$FwJoiuvd$4496b826c4192d168e5decbc502d5e3069dff2143c90cd6f7375e741b33b7a80','admin')
+-- CREATE TABLE Trade (
+--     ID int NOT NULL,
+--     product varchar(50) NOT NULL,
+--     volumn float not null,
+--     timestamp date,
+--     is_valid boolean,
+--     PRIMARY KEY (ID)
+-- );
+-- insert into trade value(1,'A',5.4,'2020-01-02',True);
+--
+-- select * from bond where secucategory='1'  and issuesize=12 and couponrate=7.3 ;
+--
+-- select * from bond where secucategory='1' and issuesize=12 and listingdate='2014-06-10' and delistingdate='2021-05-30'
