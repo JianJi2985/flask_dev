@@ -66,13 +66,13 @@ class Bond(db.Model):
     def to_json(self):
         return {k: getattr(self, k) for k in ('id', 'SECUABBR', 'CHINAME','SECUCATEGORY','ISSUESIZE','COUPONRATE','LISTINGDATE','DELISTINGDATE')}
 
-class BondFlag(db.Model):
+class bondflag(db.Model):
     id=db.Column(db.Integer,primary_key=True,autoincrement=True)
     filename=db.Column(db.String(100))
     isvalid=db.Column(db.Boolean)
 
     def __init__(self, **kwarg):
-        super(BondFlag, self).__init__(**kwarg)
+        super(bondflag, self).__init__(**kwarg)
 
 
 class EchartData(db.Model):

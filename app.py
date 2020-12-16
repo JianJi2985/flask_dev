@@ -8,6 +8,7 @@ from flask_login import LoginManager, UserMixin, login_user, current_user, login
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
 import uuid
+import json
 from flask_wtf import FlaskForm
 from flask_apscheduler import APScheduler
 from wtforms import StringField, PasswordField, BooleanField
@@ -16,13 +17,13 @@ from time import sleep
 from datetime import datetime
 from flask_socketio import SocketIO
 import tushare as ts
-from models import db, User, BondFlag
+from models import db, User, bondflag,Bond
 import os
 from blueprint import auth, bonds, echarts
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_socketio import SocketIO
-
+import pandas as pd
 
 # app = Flask(__name__)
 # app.secret_key = 'iashdfpi'
@@ -142,8 +143,31 @@ def send_async_email(app, msg):
 #         else:
 #             i += 1
 #             sleep(5)
-# def interval_test():
-
+def interval_test():
+    print('interval_test')
+    with app.app_context():
+        validfiles=bondflag.query.filter_by(isvalid=True).all()
+        for file in validfiles:
+            print('validfiles is')
+            print(file.filename)
+            path='./download/%s' % file.filename
+            print('path is')
+            print(path)
+            df=pd.read_csv(path)
+            df['json'] = df.apply(lambda x: x.to_json(), axis=1)
+            for val in df['json'].values:
+                args=json.loads(val)
+                initargs = {}
+                for key in args:
+                    if hasattr(Bond, key):
+                        initargs[key] = args[key]
+                id = Bond.query.count() + 1
+                newbond = Bond(id=id, isvalid=True, **initargs)
+                # newbond.user = current_user
+                db.session.add(newbond)
+                db.session.commit()
+            file.isvalid=False
+            db.session.commit()
 
 
 def create_app():
@@ -171,11 +195,11 @@ def create_app():
                            'trigger': 'cron',  # cron表示定时任务
                            'hour': 20,
                            'minute': 9},
-                          # {'id': 'job2',
-                          #  'func': '__main__:interval_test',
-                          #  'trigger': 'interval',
-                          #  'seconds': 5,
-                          #  }
+                          {'id': 'job2',
+                           'func': '__main__:interval_test',
+                           'trigger': 'interval',
+                           'seconds': 5,
+                           }
                           ]
     mail = Mail(app)
     db.init_app(app)
