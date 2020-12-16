@@ -16,7 +16,7 @@ from time import sleep
 from datetime import datetime
 from flask_socketio import SocketIO
 import tushare as ts
-from models import EchartData, db
+from models import echartdata, db
 from sqlalchemy import desc
 import json
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -54,17 +54,17 @@ CORS(bp,methods=['GET','POST'])
 #     def get(self):
 #         print('request.args')
 #         print(request.args)
-#         # builder = EchartData.query
+#         # builder = echartdata.query
 #         # # req=parse(request.args)
 #         # for key in request.args:
-#         #     if hasattr(EchartData, key):
+#         #     if hasattr(echartdata, key):
 #         #         vals = request.args.getlist(key)  # one or many
 #         #         print('pair ',key,vals)
 #         #         if (len(vals)==1)and(vals[0]==''):
 #         #             continue
 #         #         print('pair2 ', key, vals)
 #         #
-#         #         builder = builder.filter(getattr(EchartData, key).in_(vals))
+#         #         builder = builder.filter(getattr(echartdata, key).in_(vals))
 #         # sorter = json.loads(request.args['sorter'])
 #         #
 #         # if sorter:

@@ -75,7 +75,7 @@ class bondflag(db.Model):
         super(bondflag, self).__init__(**kwarg)
 
 
-class EchartData(db.Model):
+class echartdata(db.Model):
     """交易类"""
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     year = db.Column(db.String(4))
@@ -86,7 +86,7 @@ class EchartData(db.Model):
 
 
     def __init__(self, **kwarg):
-        super(EchartData, self).__init__(**kwarg)
+        super(echartdata, self).__init__(**kwarg)
 
     def to_json(self):
         return {k: getattr(self, k) for k in ('id', 'year', 'income','expense','month')}
