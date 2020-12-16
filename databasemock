@@ -72,6 +72,16 @@ insert into EchartData value(24,'2019',6,8,'12',1);
 
 ALTER TABLE bond
 ADD  isvalid  bool DEFAULT TRUE
+
+CREATE TABLE BondFlag
+(
+    id int not null,
+    filename varchar(100),
+    isvalid bool,
+    PRIMARY KEY (id)
+);
+
+insert into BondFlag value (1,'20201216.csv',True);
 -- CREATE TABLE Trade (
 --     ID int NOT NULL,
 --     product varchar(50) NOT NULL,
