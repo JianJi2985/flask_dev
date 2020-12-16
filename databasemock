@@ -70,6 +70,8 @@ insert into EchartData value(22,'2019',4,9,'10',1);
 insert into EchartData value(23,'2019',6,9,'11',1);
 insert into EchartData value(24,'2019',6,8,'12',1);
 
+ALTER TABLE bond
+ADD  isvalid  bool DEFAULT TRUE
 -- CREATE TABLE Trade (
 --     ID int NOT NULL,
 --     product varchar(50) NOT NULL,

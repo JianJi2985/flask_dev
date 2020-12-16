@@ -18,7 +18,7 @@ from flask_socketio import SocketIO
 import tushare as ts
 from models import db, User
 import os
-from blueprint import auth,bonds
+from blueprint import auth,bonds,echarts
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -315,6 +315,7 @@ def create_app():
 
     app.register_blueprint(auth.bp, url_prefix="/auth")
     app.register_blueprint(bonds.bp, url_prefix="/rule")
+    app.register_blueprint(echarts.bp, url_prefix="/echarts")
 
     return app
 

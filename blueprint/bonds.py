@@ -20,7 +20,8 @@ from models import Bond, db
 from sqlalchemy import desc
 import json
 from sqlalchemy.ext.declarative import DeclarativeMeta
-from flask_cors import CORS,cross_origin
+from flask_cors import CORS, cross_origin
+
 
 class AlchemyEncoder(json.JSONEncoder):
 
@@ -31,18 +32,20 @@ class AlchemyEncoder(json.JSONEncoder):
             for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
                 data = obj.__getattribute__(field)
                 try:
-                    json.dumps(data) # this will fail on non-encodable values, like other classes
+                    json.dumps(data)  # this will fail on non-encodable values, like other classes
                     fields[field] = data
                 except TypeError:
                     # fields[field] = None
-                    fields[field]=str(data)
+                    fields[field] = str(data)
             # a json-encodable dict
             return fields
 
         return json.JSONEncoder.default(self, obj)
 
+
 bp = Blueprint('bonds', __name__)
-CORS(bp,methods=['GET','POST'])
+CORS(bp, methods=['GET', 'POST'])
+
 
 # @bp.route('', strict_slashes=False,methods=['GET','POST'])
 class BondView(MethodView):
@@ -57,12 +60,13 @@ class BondView(MethodView):
         for key in request.args:
             if hasattr(Bond, key):
                 vals = request.args.getlist(key)  # one or many
-                print('pair ',key,vals)
-                if (len(vals)==1)and(vals[0]==''):
+                print('pair ', key, vals)
+                if (len(vals) == 1) and (vals[0] == ''):
                     continue
                 print('pair2 ', key, vals)
 
                 builder = builder.filter(getattr(Bond, key).in_(vals))
+        builder = builder.filter(getattr(Bond, 'isvalid') == True)
         sorter = json.loads(request.args['sorter'])
 
         if sorter:
@@ -71,11 +75,12 @@ class BondView(MethodView):
                     builder = builder.order_by(desc(k))
                 elif v == 'ascend':
                     builder = builder.order_by(k)
-        total=builder.count()
+        total = builder.count()
         if 'pageSize' not in request.args:
             resources = builder.all()
         else:
-            resources = builder.paginate(page=int(request.args['current']),per_page=int(request.args['pageSize'])).items
+            resources = builder.paginate(page=int(request.args['current']),
+                                         per_page=int(request.args['pageSize'])).items
 
         print(request.args)
         print('resources is')
@@ -83,8 +88,9 @@ class BondView(MethodView):
         # for k, v in sorter.items():
         #     print(k, v)
         print(json.dumps(resources, cls=AlchemyEncoder))
-        res={'data':json.loads(json.dumps(resources, cls=AlchemyEncoder)),'total':total,'success':True,'pageSize':request.args['pageSize'],
-             'current':int(request.args['current'])}
+        res = {'data': json.loads(json.dumps(resources, cls=AlchemyEncoder)), 'total': total, 'success': True,
+               'pageSize': request.args['pageSize'],
+               'current': int(request.args['current'])}
         # response.headers['Access-Control-Allow-Origin'] = '*'
         return jsonify(res)
 
@@ -94,17 +100,46 @@ class BondView(MethodView):
     def post(self):
         print("post args")
         print(request.get_json())
-        args=request.get_json()
-        initargs={}
-        for key in args:
-            if hasattr(Bond, key):
-                initargs[key]=args[key]
-        id=Bond.query.count()+1
-        newbond = Bond(id=id,**initargs)
-        # newbond.user = current_user
-        db.session.add(newbond)
-        db.session.commit()
-        return jsonify(newbond.to_json())
+        args = request.get_json()
+        if args['method'] == 'post':
+            initargs = {}
+            for key in args:
+                if hasattr(Bond, key):
+                    initargs[key] = args[key]
+            id = Bond.query.count() + 1
+            newbond = Bond(id=id, isvalid=True, **initargs)
+            # newbond.user = current_user
+            db.session.add(newbond)
+            db.session.commit()
+            return jsonify(newbond.to_json())
+        elif args['method'] == 'delete':
+            to_be_deleted = args['id']
+            print('to_be_deleted is')
+            print(to_be_deleted)
+            for id in to_be_deleted:
+                bond=Bond.query.get(int(id))
+                bond.isvalid=False
+                db.session.commit()
+            return jsonify({'status': 'success'})
+            # todo = Bond.query.get_or_404(todo_id)
+            # db.session.delete(todo)
+        elif args['method'] == 'update':
+            print('into update')
+            update_id = args['id']
+            bond = Bond.query.get(int(update_id))
+            bond.SECUABBR=args['name']
+            bond.CHINAME=args['desc']
+            bond.LISTINGDATE=args['startdate']
+            bond.DELISTINGDATE=args['enddate']
+            bond.SECUCATEGORY=args['target']
+            bond.ISSUESIZE=args['issuesize']
+            bond.COUPONRATE=args['couponrate']
+            db.session.commit()
+            return jsonify({'status': 'success'})
+
+
+
+
 
     # def put(self, todo_id):
     #     todo = Todo.query.get_or_404(todo_id)
@@ -114,13 +149,15 @@ class BondView(MethodView):
     #     db.session.commit()
     #     return jsonify({'status': 'success', 'todo': todo.to_json()})
     #
-    # def delete(self, todo_id):
-    #     todo = Bond.query.get_or_404(todo_id)
-    #     db.session.delete(todo)
-    #     db.session.commit()
+    # def delete(self):
+    #     print('todo id is')
+    #     print(request.args)
+    #     # todo = Bond.query.get_or_404(todo_id)
+    #     # db.session.delete(todo)
+    #     # db.session.commit()
     #     return jsonify({'status': 'success'})
 
 
 todo_api = BondView.as_view('bond')
-bp.add_url_rule('/', view_func=todo_api, methods=['GET', 'POST'],strict_slashes=True)
+bp.add_url_rule('/', view_func=todo_api, methods=['GET', 'POST', 'DELETE'], strict_slashes=True)
 # bp.add_url_rule('/<int:todo_id>', view_func=todo_api, methods=['PUT', 'DELETE'])
