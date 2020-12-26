@@ -42,47 +42,14 @@ class AlchemyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 bp = Blueprint('echarts', __name__)
-CORS(bp,methods=['GET','POST'])
 
 # # @bp.route('', strict_slashes=False,methods=['GET','POST'])
 class EchartsView(MethodView):
     def get(self):
-        print('request.args')
-        print(request.args)
-
-        return request.args
-#     # def to_json(self):
-#     #     return {k: getattr(self, k) for k in ('id', 'text', 'done')}
-#
-#     def post(self):
-#         print("post args")
-#         print(request.get_json())
-#         args=request.get_json()
-#         initargs={}
-#         for key in args:
-#             if hasattr(Bond, key):
-#                 initargs[key]=args[key]
-#         id=Bond.query.count()+1
-#         newbond = Bond(id=id,**initargs)
-#         # newbond.user = current_user
-#         db.session.add(newbond)
-#         db.session.commit()
-#         return jsonify(newbond.to_json())
-#
-#     # def put(self, todo_id):
-#     #     todo = Todo.query.get_or_404(todo_id)
-#     #     data = request.get_json()
-#     #     for k, v in data.items():
-#     #         setattr(todo, k, v)
-#     #     db.session.commit()
-#     #     return jsonify({'status': 'success', 'todo': todo.to_json()})
-#     #
-#     # def delete(self, todo_id):
-#     #     todo = Bond.query.get_or_404(todo_id)
-#     #     db.session.delete(todo)
-#     #     db.session.commit()
-#     #     return jsonify({'status': 'success'})
-#
+        builder = echartdata.query
+        print('year:', request.args['year'])
+        result = builder.filter_by(year=request.args['year']).all()
+        return json.dumps(builder.filter_by(year=request.args['year']).all(), cls=AlchemyEncoder)
 #
 todo_api = EchartsView.as_view('echarts')
 bp.add_url_rule('/', view_func=todo_api, methods=['GET', 'POST'],strict_slashes=True)

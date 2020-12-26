@@ -1,4 +1,5 @@
 from flask import Blueprint, Flask, request, jsonify, redirect, url_for, render_template, flash
+from flask.helpers import make_response
 from flask_script import Manager, Shell
 from flask.views import MethodView
 from flask_mail import Mail, Message
@@ -21,6 +22,8 @@ from sqlalchemy import desc
 import json
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from flask_cors import CORS, cross_origin
+from flask import send_file, make_response
+import time
 
 bp = Blueprint('excel', __name__)
 CORS(bp, methods=['GET', 'POST'])
@@ -32,8 +35,17 @@ class ExcelView(MethodView):
     #         if k=='ISSUESIZE':
     #             parseres[k]=
     def get(self):
-        print('request is')
-        print(session)
+        result = Bond.query.all()
+        name = uuid.uuid1().__str__() + ".csv"
+        with open(name, "w") as fd:
+            fd.write("债券名称,债券描述,发行规模（亿）,票面利率,债券类型,发行日期,到期日期\n")
+            for row in result:
+                fd.write('{},{},{},{},{},{},{}\n'.format(
+                    row.SECUABBR, row.CHINAME, row.ISSUESIZE, row.COUPONRATE, row.SECUCATEGORY, row.LISTINGDATE,
+                    row.DELISTINGDATE))
+        response = make_response(send_file(name, as_attachment=True))
+        response.headers["content-disposition"] = "attachment; filename=" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ".csv"
+        return response 
 
 
 todo_api = ExcelView.as_view('bond')
