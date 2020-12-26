@@ -45,51 +45,12 @@ bp = Blueprint('echarts', __name__)
 CORS(bp,methods=['GET','POST'])
 
 # # @bp.route('', strict_slashes=False,methods=['GET','POST'])
-# class EchartsView(MethodView):
-#     # def parse(self,args):
-#     #     parseres=jsonify(args)
-#     #     for k,v in parseres.items():
-#     #         if k=='ISSUESIZE':
-#     #             parseres[k]=
-#     def get(self):
-#         print('request.args')
-#         print(request.args)
-#         # builder = echartdata.query
-#         # # req=parse(request.args)
-#         # for key in request.args:
-#         #     if hasattr(echartdata, key):
-#         #         vals = request.args.getlist(key)  # one or many
-#         #         print('pair ',key,vals)
-#         #         if (len(vals)==1)and(vals[0]==''):
-#         #             continue
-#         #         print('pair2 ', key, vals)
-#         #
-#         #         builder = builder.filter(getattr(echartdata, key).in_(vals))
-#         # sorter = json.loads(request.args['sorter'])
-#         #
-#         # if sorter:
-#         #     for k, v in sorter.items():
-#         #         if v == 'descend':
-#         #             builder = builder.order_by(desc(k))
-#         #         elif v == 'ascend':
-#         #             builder = builder.order_by(k)
-#         # total=builder.count()
-#         # if 'pageSize' not in request.args:
-#         #     resources = builder.all()
-#         # else:
-#         #     resources = builder.paginate(page=int(request.args['current']),per_page=int(request.args['pageSize'])).items
-#         #
-#         # print(request.args)
-#         # print('resources is')
-#         # print(resources)
-#         # # for k, v in sorter.items():
-#         # #     print(k, v)
-#         # print(json.dumps(resources, cls=AlchemyEncoder))
-#         # res={'data':json.loads(json.dumps(resources, cls=AlchemyEncoder)),'total':total,'success':True,'pageSize':request.args['pageSize'],
-#         #      'current':int(request.args['current'])}
-#         # # response.headers['Access-Control-Allow-Origin'] = '*'
-#         # return jsonify(res)
-#         return request.args
+class EchartsView(MethodView):
+    def get(self):
+        print('request.args')
+        print(request.args)
+
+        return request.args
 #     # def to_json(self):
 #     #     return {k: getattr(self, k) for k in ('id', 'text', 'done')}
 #
@@ -123,6 +84,6 @@ CORS(bp,methods=['GET','POST'])
 #     #     return jsonify({'status': 'success'})
 #
 #
-# todo_api = EchartsView.as_view('bond')
-# bp.add_url_rule('/', view_func=todo_api, methods=['GET', 'POST'],strict_slashes=True)
+todo_api = EchartsView.as_view('echarts')
+bp.add_url_rule('/', view_func=todo_api, methods=['GET', 'POST'],strict_slashes=True)
 # # bp.add_url_rule('/<int:todo_id>', view_func=todo_api, methods=['PUT', 'DELETE'])
